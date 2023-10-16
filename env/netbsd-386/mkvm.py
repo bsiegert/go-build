@@ -8,28 +8,13 @@ import sys
 
 arch = sys.argv[1]
 release = sys.argv[2]
-bootstrap_tar = sys.argv[3]
-bootstrap_sha = sys.argv[4]
-
-install_packages = [
-    "bash",
-    "curl",
-    "git-base",
-    "go121",
-    # Interactive debugging tools for users using gomote ssh
-    "emacs29-nox11",
-    "vim",
-    "screen",
-    # For https://golang.org/issue/24354
-    "clang",
-    "cmake",
-]
+pkg_release = sys.argv[3]
 
 commands = [
     """cat >> /etc/rc.local <<EOF
 (
   export PATH=/usr/pkg/bin:/usr/pkg/sbin:${PATH}
-  export GOROOT_BOOTSTRAP=/usr/pkg/go121
+  export GOROOT_BOOTSTRAP=/usr/pkg/go14
   set -x
   echo 'starting buildlet script'
   netstat -rn
@@ -51,14 +36,13 @@ EOF""",
 mtu 1460
 EOF""",
     "dhcpcd -w",
-    # Download the bootstrap kit.
-    "ftp https://pkgsrc.smartos.org/packages/NetBSD/bootstrap/{}".format(bootstrap_tar),
-    'echo "{} {}" | sha1 -c'.format(bootstrap_sha, bootstrap_tar),
-    "tar -zxpf {} -C /".format(bootstrap_tar),
-    "rm {}".format(bootstrap_tar),
-    "pkgin update",
-    "pkgin -y install {}".format(" ".join(install_packages)),
-    "pkgin clean",
+    "env PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/%s/%s/All/ pkg_add bash curl" % (arch, pkg_release),
+    "env PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/%s/%s/All/ pkg_add git-base" % (arch, pkg_release),
+    "env PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/%s/%s/All/ pkg_add mozilla-rootcerts mozilla-rootcerts-openssl go14" % (arch, pkg_release),
+    # Interactive debugging tools for users using gomote ssh:
+    "env PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/%s/%s/All/ pkg_add emacs25-nox11 vim screen" % (arch, pkg_release),
+    # For https://golang.org/issue/24354
+    "env PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/%s/%s/All/ pkg_add clang cmake" % (arch, pkg_release),
 
     # Remove the /tmp entry, because it's mounted as tmpfs -s=ram%25 by default, which isn't enough disk space.
     """ed /etc/fstab << EOF
@@ -74,8 +58,8 @@ EOF""",
 ]
 
 a = anita.Anita(
-    anita.URL('https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-{}/latest/{}/'.format(release, arch)),
-    workdir="work-NetBSD-{}".format(arch),
+    anita.URL('https://nycdn.netbsd.org/pub/NetBSD-daily/NetBSD-9/latest/%s/' % arch),
+    workdir="work-NetBSD-%s" % arch,
     disk_size="16G",
     memory_size="2G",
     persist=True)
