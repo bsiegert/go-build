@@ -16,9 +16,9 @@ set -e -x
 
 ANITA_VERSION=2.10
 ARCH=i386
-RELEASE=9.3
+RELEASE=10.0
 # The release that the packages have been built for.
-PKG_RELEASE=9.0_2022Q2
+PKG_RELEASE=10.0
 
 # Must use GNU tar. On NetBSD, tar is BSD tar and gtar is GNU.
 TAR=tar
@@ -26,10 +26,8 @@ if which gtar > /dev/null; then
   TAR=gtar
 fi
 
-LATEST_BUILD=`curl -Ls -w '%{url_effective}'  -o /dev/null https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-9/latest/ | xargs basename`
-
 WORKDIR=work-NetBSD-${ARCH}
-VM_IMAGE=vm-image-netbsd-${ARCH}-${LATEST_BUILD}.tar.gz
+VM_IMAGE=vm-image-netbsd-${ARCH}.tar.gz
 
 # Remove WORKDIR unless -k (keep) is given.
 if [ "$1" != "-k" ]; then
@@ -47,7 +45,7 @@ cd anita-${ANITA_VERSION}
 python3 setup.py build
 cd ..
 
-env PYTHONPATH=${PWD}/anita-${ANITA_VERSION} python3 mkvm.py ${ARCH} ${RELEASE} ${PKG_RELEASE}
+env PYTHONPATH=${PWD}/anita-${ANITA_VERSION} python3 ../netbsd-amd64/mkvm.py ${ARCH} ${RELEASE} ${PKG_RELEASE}
 
 echo "Archiving wd0.img (this may take a while)"
 ${TAR} -Szcf ${VM_IMAGE} --transform s,${WORKDIR}/wd0.img,disk.raw, ${WORKDIR}/wd0.img

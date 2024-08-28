@@ -14,12 +14,10 @@
 
 set -e -x
 
-ANITA_VERSION=2.10
+ANITA_VERSION=2.15
 ARCH=amd64
-RELEASE=10
-# From https://pkgsrc.smartos.org/install-on-netbsd/
-BOOTSTRAP_TAR="bootstrap-netbsd-trunk-x86_64-20230918.tar.gz"
-BOOTSTRAP_SHA="493161aa5dd4c91c99e77187fa9fc3498fd2560b"
+RELEASE=10.0
+PKG_RELEASE=10.0
 
 # Must use GNU tar. On NetBSD, tar is BSD tar and gtar is GNU.
 TAR=tar
@@ -27,10 +25,8 @@ if which gtar > /dev/null; then
   TAR=gtar
 fi
 
-LATEST_BUILD=`curl -Ls -w '%{url_effective}'  -o /dev/null https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-${RELEASE}/latest/ | xargs basename`
-
-WORKDIR=work-NetBSD-${ARCH}
-VM_IMAGE=vm-image-netbsd-${ARCH}-${LATEST_BUILD}.tar.gz
+WORKDIR=work-NetBSD-${RELEASE}-${ARCH}
+VM_IMAGE=vm-image-netbsd-${RELEASE}-${ARCH}.tar.gz
 
 # Remove WORKDIR unless -k (keep) is given.
 if [ "$1" != "-k" ]; then
@@ -48,7 +44,7 @@ cd anita-${ANITA_VERSION}
 python3 setup.py build
 cd ..
 
-env PYTHONPATH=${PWD}/anita-${ANITA_VERSION} python3 mkvm.py ${ARCH} ${RELEASE} ${BOOTSTRAP_TAR} ${BOOTSTRAP_SHA}
+env PYTHONPATH=${PWD}/anita-${ANITA_VERSION} python3 mkvm.py ${ARCH} ${RELEASE} ${PKG_RELEASE}
 
 
 echo "Archiving wd0.img (this may take a while)"

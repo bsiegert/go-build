@@ -8,14 +8,16 @@ import sys
 
 arch = sys.argv[1]
 release = sys.argv[2]
-bootstrap_tar = sys.argv[3]
-bootstrap_sha = sys.argv[4]
+pkg_release = sys.argv[3]
+
+pkg_path = "https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/{}/{}/All/".format(arch, pkg_release)
+
 
 install_packages = [
     "bash",
     "curl",
     "git-base",
-    "go121",
+    "go122",
     # Interactive debugging tools for users using gomote ssh
     "emacs29-nox11",
     "vim",
@@ -51,11 +53,8 @@ EOF""",
 mtu 1460
 EOF""",
     "dhcpcd -w",
-    # Download the bootstrap kit.
-    "ftp https://pkgsrc.smartos.org/packages/NetBSD/bootstrap/{}".format(bootstrap_tar),
-    'echo "{} {}" | sha1 -c'.format(bootstrap_sha, bootstrap_tar),
-    "tar -zxpf {} -C /".format(bootstrap_tar),
-    "rm {}".format(bootstrap_tar),
+    "env PKG_PATH={} pkg_add pkgin".format(pkg_path),
+    "echo {} > /usr/pkg/etc/pkgin/repositories.conf".format(pkg_path),
     "pkgin update",
     "pkgin -y install {}".format(" ".join(install_packages)),
     "pkgin clean",
@@ -74,8 +73,8 @@ EOF""",
 ]
 
 a = anita.Anita(
-    anita.URL('https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-{}/latest/{}/'.format(release, arch)),
-    workdir="work-NetBSD-{}".format(arch),
+    anita.URL('https://cdn.netbsd.org/pub/NetBSD/NetBSD-{}/{}/'.format(release, arch)),
+    workdir="work-NetBSD-{}-{}".format(release, arch),
     disk_size="16G",
     memory_size="2G",
     persist=True)
